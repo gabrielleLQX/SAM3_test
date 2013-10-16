@@ -27,6 +27,7 @@ int main() {
 
   static AT86RF_io *radioIO;
   radioIO = malloc(sizeof(AT86RF_io));
+  radioIO->nrst = 1;
   radioIO->s_sclk = 0;
   radioIO->s_miso = 0;
   radioIO->s_mosi = 0;
@@ -51,61 +52,89 @@ int main() {
 
   unsigned char *s = "abcdefgh";
   int j = 0;
+
   
   printf("\r\n------SPI Test-----\r\n");
   while(*(s+j)!='\0')
     {
-      printf("%x ",spiTransferByte(*(s+(j++))));
+      printf("%c ",spiTransferByte(*(s+(j++))));
     } 
   //spiCommand(cmd_ragister_read);
   printf("\r\n------End of SPI Test-----\r\n");
-
-  //printf("\n------Radio Test-----\r\n");
-  RTT_Init(pRTTC);
   
+
+  printf("\n------Radio Test-----\r\n");
+  RTT_Init(pRTTC);  
   RTT_SetPrescaler(pRTTC,0xf000);
-  //printf("\rRTT_SetPrescaler\r\n");
-
   RTT_SetAlarm(pRTTC,2);
-  //printf("\rRTT_SetAlarm\r\n");
-
   RTT_EnableIT(pRTTC,0x3 << 16);
-  //printf("\rRTT_EnableIT\r\n");
   
   radioInit();
-  
+  /*********************************************************************
+   *test of changing state by writing TRX_CMD in register TRX_STATE(0x02)
+   ********************************************************************/
   int i;
-  int finish;
-  //at least 2*8bits for transmiting
-  i = 15;
-  do{
-    radioIO->nrst == 1;
+  boolean finish;
+  uint8_t reg_addr;//test
+  uint8_t cmd_state;
+  reg_addr = 0x02;//TRX_STATE
+  cmd_state = TRX_OFF;//TRX_CMD
 
+  //at least 2*8bits for transmiting
+  //8bits of cmd
+  //8bits of addr/reg
+  i = 15;
+  j = 7;
+  while(1){
+    radioIO->nrst == 1;      
     
-      while(RTT_GetStatus(pRTTC)==0){
-	//radioIO->s_sclk = 0;
-      }
-      //radioIO->s_sclk = 1;
-      spiIO->m_spck = 1;
-      if(i>7)
-	spiTRXSPI(spiIO, 0xAF, i-8);
-      //else if(i>=0)	
-      //spiTRXSPI(spiIO, 0xF0, i);
+    while(RTT_GetStatus(pRTTC)==0){	
+      spiIO->m_spck = 0;
       radioIO->s_sclk = spiIO->m_spck;
-      radioIO->s_mosi = spiIO->m_mosi;
-      radioIO->s_nsel = spiIO->m_npcs0_nss;
-      finish = radioTRXtest(radioIO, i);
-      spiIO->m_miso = radioIO->s_miso;
-      if(i>-1)
-	i--;
-     
-    //RTT_GetTime(pRTTC);
-  }while(finish==1);
-  
+    }
+    spiIO->m_spck = 1;
+
+    if(finish == 0)
+      {
+	if(i>7)
+	  //test
+	  spiTRXSPI(spiIO, CMD_REGISTER_WRITE | reg_addr, i-8);
+	else if(i>=0)	
+	  spiTRXSPI(spiIO, cmd_state, i);
+
+	radioIO->s_sclk = spiIO->m_spck;
+	radioIO->s_mosi = spiIO->m_mosi;
+	radioIO->s_nsel = spiIO->m_npcs0_nss;
+	//"finish" = 1 when cmd has been written into TRX_CMD
+	finish = (radioTRXtest(radioIO, i)==0);
+	spiIO->m_miso = radioIO->s_miso;
+	if(i>=0){
+	  i--;
+	}
+	else{
+	  radioRun(radioIO);
+	  if(j==0)
+	    j=8;
+	  j--;
+	}
+      }
+    else{
+      radioRun(radioIO);
+      //finish = 0;
+      //i = 15;
+      //j = 7;
+    }
+  }
+
+
   free(radioIO);
   free(spiIO);
   
   printf("\r------End of Radio Test-----\r\n");
+
+  /****************************************************
+   *test of Real Time Timer
+   ***************************************************/
   /*
   printf("\n------RTT Test-----\r\n");
   RTT_SetPrescaler(pRTTC,0x80);
@@ -124,8 +153,7 @@ int main() {
   */
 
   printf("\r\nPlease press any button to exit :\r\n");
-  getchar();
-  
+  getchar();  
   printf("\r\n------end of Hello ! ------\r\n");
   return 0;
 }

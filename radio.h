@@ -194,12 +194,8 @@ static uint16_t FCF;
 #define CMD_SRAM_READ      0x00
 #define CMD_SRAM_WRITE     0x40
 
-//AT86RF_reg *radio_reg;
-//AT86RF_io *radioIO;
-
-void radioInit();
-//void radioIOInit();
 void radioReset();
+void radioInit();
 
 //SPI slave
 u08 radioPhyStatus();

@@ -1,14 +1,3 @@
-/*
- * TITLE		: 	SPI DRIVER FOR AT91SAM7S256
- * AUTHOR		:	BALAJI VENKATACHALAM
- * DATE			:	2ND OCTOBER 2008
- * FILENAME		:	spi.c
- * DESCRIPTION	:	COMPRISES 3 FUNCTIONS.
- * 					1. void spiInit(void) 		- Initializes SPI peripheral
- * 					2. u08 spiTransferByte(u08)	- Transfer a Character
- * 					3. u16 spiTransferWord(u16)	- Transfer a Word
- * */
-
 #include "AT91SAM3SD8.h"
 //#include "at91sam3sd8.h"
 #include "global.h"
@@ -41,8 +30,8 @@ void spiInit()
   pSPI->SPI_CR = (AT91C_SPI_SPIEN | AT91C_SPI_SWRST);	
   pSPI->SPI_CR = AT91C_SPI_SPIEN;
   //Local Loop, PS fixed
-  //pSPI->SPI_MR = (AT91C_SPI_LLB | AT91C_SPI_MSTR | AT91C_SPI_MODFDIS | AT91C_SPI_PS_FIXED | ((0x0)<<16));
-  pSPI->SPI_MR = (AT91C_SPI_MSTR | AT91C_SPI_MODFDIS | AT91C_SPI_PS_FIXED | ((0x0)<<16));
+  pSPI->SPI_MR = (AT91C_SPI_LLB | AT91C_SPI_MSTR | AT91C_SPI_MODFDIS | AT91C_SPI_PS_FIXED | ((0x0)<<16));
+  //pSPI->SPI_MR = (AT91C_SPI_MSTR | AT91C_SPI_MODFDIS | AT91C_SPI_PS_FIXED | ((0x0)<<16));
   pSPI->SPI_CSR[0] = (AT91C_SPI_CPOL | AT91C_SPI_NCPHA | AT91C_SPI_CSAAT | AT91C_SPI_BITS_8 | AT91C_SPI_SCBR | AT91C_SPI_SCBR | AT91C_SPI_DLYBCT);  
 }
 
