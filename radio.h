@@ -1,32 +1,3 @@
-/* ----------------------------------------------------------------------------
- *         ATMEL Microcontroller Software Support
- * ----------------------------------------------------------------------------
- * Copyright (c) 2009, Atmel Corporation
- *
- * All rights reserved.
- *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * - Redistributions of source code must retain the above copyright notice,
- * this list of conditions and the disclaimer below.
- *
- * Atmel's name may not be used to endorse or promote products derived from
- * this software without specific prior written permission.
- *
- * DISCLAIMER: THIS SOFTWARE IS PROVIDED BY ATMEL "AS IS" AND ANY EXPRESS OR
- * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
- * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT ARE
- * DISCLAIMED. IN NO EVENT SHALL ATMEL BE LIABLE FOR ANY DIRECT, INDIRECT,
- * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
- * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA,
- * OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
- * LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
- * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
- * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- * ----------------------------------------------------------------------------
- */
-
 #ifndef RADIO_H
 #define RADIO_H
 //#include "AT91SAM3SD8.h"
@@ -34,37 +5,99 @@
 //Radio I/O 
 typedef struct _ATRADIO
 {
-  boolean DIG3;
-  boolean DIG4;
-  boolean AVSS1;
-  boolean RFP;
-  boolean RFN;
-  boolean AVSS2;
-  boolean DVSS1;
-  boolean nRST;
-  boolean DIG1;
-  boolean DIG2;
-  boolean SLP_TR;
-  boolean DVSS2;
-  boolean DVDD1;
-  boolean DVDD2;
-  boolean DEVDD2;
-  boolean DVSS3;
-  boolean CLKM;
-  boolean DVSS4;
-  boolean S_SCLK;//in
-  boolean S_MISO;//out
-  boolean DVSS5;
-  boolean S_MOSI;//in
-  boolean S_nSEL;//in
-  boolean IRQ;
-  boolean XTAL2;
-  boolean XTAL1;
-  boolean AVSS3;
-  boolean EVDD;
-  boolean AVDD;
-  boolean AVSS4[3]; 
-}*AT86RF_io;
+  boolean dig3;
+  boolean dig4;
+  boolean avss1;
+  boolean rfp;
+  boolean rfn;
+  boolean avss2;
+  boolean dvss1;
+  boolean nrst;
+  boolean dig1;
+  boolean dig2;
+  boolean slp_tr;
+  boolean dvss2;
+  boolean dvdd1;
+  boolean dvdd2;
+  boolean devdd2;
+  boolean dvss3;
+  boolean clkm;
+  boolean dvss4;
+  boolean s_sclk;//in
+  boolean s_miso;//out
+  boolean dvss5;
+  boolean s_mosi;//in
+  boolean s_nsel;//in
+  boolean irq;
+  boolean xtal2;
+  boolean xtal1;
+  boolean avss3;
+  boolean evdd;
+  boolean avdd;
+  boolean avss4[3]; 
+}AT86RF_io;
+
+typedef struct _AT86RFREG{
+  uint8_t tx_status;
+  uint8_t trx_state;
+  uint8_t trx_ctrl_0;
+  uint8_t trx_ctrl_1;
+  uint8_t phy_tx_pwr;
+  uint8_t phy_rssi;
+  uint8_t phy_ed_level;
+  uint8_t phy_cc_cca;
+  uint8_t cca_thres;
+  uint8_t rx_ctrl;
+  uint8_t sfd_value;
+  uint8_t trx_ctrl_2;
+  uint8_t ant_div;  
+  uint8_t irq_mask;
+  uint8_t irq_status;
+  uint8_t vreg_ctrl;
+  uint8_t batmon;
+  uint8_t xosc_ctrl;
+  uint8_t cc_ctrl_0;
+  uint8_t cc_ctrl_1;
+  uint8_t rx_syn;
+  uint8_t trx_rpc;
+  uint8_t xah_ctrl_1;
+  uint8_t ftn_ctrl;
+  uint8_t xah_ctrl_2;
+  uint8_t pll_cf;
+  uint8_t pll_dcu;
+  uint8_t part_num;  
+  uint8_t version_num;
+  uint8_t main_id[2];
+  uint8_t short_addr[2];
+  uint8_t pan_id[2];
+  uint8_t ieee_addr[8];
+  uint8_t xah_ctrl_0;
+  uint8_t csma_seed[2];
+  uint8_t csma_be;
+  uint8_t Reserved1[6];
+  uint8_t tst_ctrl_digi;
+  uint8_t Reserved2[4];
+  uint8_t phy_tx_time;
+  uint8_t tst_agc;
+  uint8_t tst_sdm;
+}AT86RF_reg;
+
+u08 phr;//phy header
+u08 lqi;//link quality indication
+u08 ed;//energy detect
+u08 psdu[128];
+
+u08 aes[19];
+
+uint8_t pre_seq[4];//preamble sequence
+#define fcf (psdu[0]+(psdu[1]<<8))//frame control field
+#define d_panid (psdu[3]+(psdu[4]<<8))//destination PAN_ID
+
+uint16_t fcs;//frame control sequence
+uint8_t csma_rctr;
+uint8_t frame_rctr;
+#define CMD_BITS  ((uint8_t) 0x7 << 5)
+
 
 #define TRX_STATUS                   ((uint8_t) 0x1f <<  0)
 #define TRX_CMD                      ((uint8_t) 0x1f <<  0)
@@ -132,12 +165,15 @@ typedef struct _ATRADIO
 //0x2E CSMA_SEED_1
 #define AACK_SET_PD      ((uint8_t) 0x1 << 5)
 #define AACK_DIS_ACK     ((uint8_t) 0x1 << 4)
+#define AACK_I_AM_COORD  ((uint8_t) 0x1 << 3)
 #define CSMA_SEED_1      ((uint8_t) 0x7 << 0)
 
 //static uint16_t FCF;
-#define FrameType    ((uint16_t) 0x7 << 0)
-#define ACKReq       ((uint16_t) 0x1 << 5)
-#define FrameVersion ((uint16_t) 0x3 << 12)
+#define FRAME_TYPE    ((uint16_t) 0x7 << 0)
+#define ACKREQ        ((uint16_t) 0x1 << 5)
+#define FRAME_VERSION ((uint16_t) 0x3 << 12)
+#define D_ADDR_MODE       ((uint16_t) 0x3 << 10)
+#define S_ADDR_MODE       ((uint16_t) 0x3 << 14)
 
 static uint16_t FCF;
 #define FRAMETYPE_BEACON       ((uint8_t) 0x0 << 0)
@@ -151,14 +187,21 @@ static uint16_t FCF;
 #define DES_ADDR_MODE          ((uint8_t) 0x3 << 10)
 #define SRC_ADDR_MODE          ((uint8_t) 0x3 << 14)
 
+#define CMD_REGISTER_READ  0x80
+#define CMD_REGISTER_WRITE 0xC0
+#define CMD_FRAME_READ     0x20
+#define CMD_FRAME_WRITE    0x60
+#define CMD_SRAM_READ      0x00
+#define CMD_SRAM_WRITE     0x40
 
-
-static uint8_t csma_rctr;
-static uint8_t frame_rctr;
+//AT86RF_reg *radio_reg;
+//AT86RF_io *radioIO;
 
 void radioInit();
 //void radioIOInit();
 void radioReset();
+
+//SPI slave
 u08 radioPhyStatus();
 u08 radioReadReg(u08 cmd);
 void radioWrReg(u08 cmd, u08 value);
@@ -171,22 +214,29 @@ void radioWrPHR(u08 phr);
 void radioWrPSDU(u08 psdu, u08 k);
 u08 radioReadSRAM(u08 addr);
 void radioWrSRAM(u08 addr, u08 data);
-/*
+void radioTRXSPI(AT86RF_io *radioIO);
+
+boolean radioTRXtest(AT86RF_io *radioIO, int i);
+
+//State Machine
 void radioUpdate(u08 cmd);
-boolean radioTransferBeacon();
 boolean radioFrameFiltering();
 void radioFrameReceive();
 void radioWait(u08 time);
-void radioRisingEdge();
+void radioRisingEdge(AT86RF_io *radioIO);
 void radioACKTransmit();
-boolean radioTransaction();
+void radioScanMHR();
+boolean radioTransaction(AT86RF_io *radioIO);
 boolean radioFrameEnd();
 boolean radioSHRDetected();
-boolean radioReceiveACK();
+boolean radioReceiveACK(AT86RF_io *radioIO);
 boolean radioACKValid();
-boolean radioCCA(u08 *csma_rctr);
-boolean radioTxAret();
-void radioStateMachine();
-*/
+boolean radioCCA();
+void radioTransmitFrame(AT86RF_io *radioIO);
+boolean radioTxAret(AT86RF_io *radioIO);
+void radioStateMachine(AT86RF_io *radioIO);
+
+void radioRun(AT86RF_io *radioIO);
+
 #endif
 

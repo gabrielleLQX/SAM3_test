@@ -16,19 +16,22 @@
 //SPI I/O
 typedef struct _ATSPI
 {
-  boolean M_SPCK;
-  boolean M_MISO;
-  boolean M_MOSI;
-  boolean M_NPCS0_NSS;
-  boolean M_NPCS1;
-  boolean M_NPCS2;
-  boolean M_NPCS3;
-}*AT91_spi;
+  boolean m_spck;
+  boolean m_miso;
+  boolean m_mosi;
+  boolean m_npcs0_nss;
+  boolean m_npcs1;
+  boolean m_npcs2;
+  boolean m_npcs3;
+}AT91_spi;
 
 
-void spiInit(unsigned int debug);
-u08 spiTransferByte(u08 TxData, unsigned int debug);
-u16 SpiTransferWord(u16 TxData,unsigned int debug);
+void spiInit();
+u08 spiTransferByte(u08 TxData);
+u16 SpiTransferWord(u16 TxData);
+
+void spiIOInit(AT91_spi *spiIO);
+void spiTRXSPI(AT91_spi *spiIO, u08 TxData, int i);
 #endif
 //@}
 
