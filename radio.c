@@ -1312,7 +1312,7 @@ void radioStateMachine(AT86RF_io *radioIO)
     }
     break;
   case TRX_OFF:
-    printf("\r State = TX_OFF\n\r");
+    //printf("\r State = TX_OFF\r\n");
     radio_update(cmd);
     if((radio_reg->tx_status & TRX_STATUS) == TRX_OFF){
       if(radioIO->slp_tr==1){

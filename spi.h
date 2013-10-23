@@ -27,7 +27,7 @@ typedef struct _ATSPI
 
 
 void spiInit();
-u08 spiTransferByte(u08 TxData);
+void spiTransferByte(u08 TxData, AT91_spi *spiIO, int i);
 u16 SpiTransferWord(u16 TxData);
 
 void spiIOInit(AT91_spi *spiIO);

@@ -35,28 +35,37 @@ void spiInit()
   pSPI->SPI_CSR[0] = (AT91C_SPI_CPOL | AT91C_SPI_NCPHA | AT91C_SPI_CSAAT | AT91C_SPI_BITS_8 | AT91C_SPI_SCBR | AT91C_SPI_SCBR | AT91C_SPI_DLYBCT);  
 }
 
-u08 spiTransferByte(u08 TxData) 
+void spiTransferByte(u08 TxData, AT91_spi *spiIO, int i) 
 { 
   unsigned char RxData = 0;
+  static unsigned char ShiftRegister = 0;
   //ENABLE 8 BIT TRANSFER
   pSPI->SPI_CSR[0] |= AT91C_SPI_BITS_8;
 
-  //MASK UNUSED BITS
-  TxData &= 0x000000FF;
-
-  //WAIT UNTIL TRANSMIT REGISTER IS EMPTY
-  while (!(pSPI ->SPI_SR & AT91C_SPI_TXEMPTY));
-
-  // TRANSMIT DATA
-  pSPI->SPI_TDR = TxData;
+  if(i==7){
+    //MASK UNUSED BITS
+    TxData &= 0x000000FF;
     
-  //READ THE RECEIVED DATA
-  //WAIT UNTIL RECEIVE REGISTER IS FULL
-  while ((pSPI -> SPI_SR & AT91C_SPI_RDRF) == 0);
-
-  //READ RDR AND MASK UNUSED BITS
-  RxData = (pSPI -> SPI_RDR & 0xFF); 
-  return RxData; 
+    //WAIT UNTIL TRANSMIT REGISTER IS EMPTY
+    while (!(pSPI ->SPI_SR & AT91C_SPI_TXEMPTY));
+    
+    // TRANSMIT DATA
+    pSPI->SPI_TDR = TxData;
+    ShiftRegister = pSPI->SPI_TDR;
+  }
+  if(i<8){
+    spiIO->m_mosi = (((ShiftRegister >> i) & 1) == 1);
+  }
+  if(i==0){
+    //READ THE RECEIVED DATA
+    //WAIT UNTIL RECEIVE REGISTER IS FULL
+    while ((pSPI -> SPI_SR & AT91C_SPI_RDRF) == 0);
+    ShiftRegister = 0;
+    //READ RDR AND MASK UNUSED BITS
+    RxData = (pSPI -> SPI_RDR & 0xFF); 
+    printf("\rspi_receive = %x\r\n", RxData);
+    //return RxData; 
+  }
 }
 u16 spiTransferWord(u16 TxData) 
 { 
