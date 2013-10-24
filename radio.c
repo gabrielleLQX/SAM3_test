@@ -67,6 +67,11 @@ void radioInit()
   radioReset();
 }
 
+void radioDestroy()
+{
+  free(radio_reg);
+}
+
 u08 radioReadReg(u08 cmd)
 {
   switch(cmd & 0x3f){
@@ -676,6 +681,7 @@ boolean radioTRXtest(AT86RF_io *radioIO, int i){
 	if(i==0){
 	  k = 0;
 	  printf("\rreg[0x%x] = %x\r\n",cmd & 0x3F,radioReadReg(cmd & 0x3F));
+	  cmd = 0;
 	}
       }
       else if((cmd & 0xC0) == CMD_REGISTER_WRITE){//register write
@@ -683,7 +689,9 @@ boolean radioTRXtest(AT86RF_io *radioIO, int i){
 	if(i==0){
 	  k = 0;
 	  radioWrReg(cmd,data);
-	  printf("\rcmd = %x, data = %x\r\n",cmd,data);
+	  printf("\rcmd = %x, data = %x\r\n",cmd,data);	
+	  data = 0;
+	  cmd = 0;
 	}
       }
       else if((cmd & 0xE0) == CMD_FRAME_READ){//Frame read
@@ -703,6 +711,7 @@ boolean radioTRXtest(AT86RF_io *radioIO, int i){
 	  radioWrPHR(phr);
 	  k = phr;//num_PSDU
 	  j = 7;
+	  phr = 0;
 	}
       }
       else if((cmd & 0xE0) == CMD_SRAM_READ){//SRAM read
@@ -1312,7 +1321,7 @@ void radioStateMachine(AT86RF_io *radioIO)
     }
     break;
   case TRX_OFF:
-    //printf("\r State = TX_OFF\r\n");
+    printf("\r State = TRX_OFF\r\n");
     radio_update(cmd);
     if((radio_reg->tx_status & TRX_STATUS) == TRX_OFF){
       if(radioIO->slp_tr==1){
@@ -1406,5 +1415,21 @@ void radioRun(AT86RF_io *radioIO){
   }  
   else{
     radioStateMachine(radioIO);
+  }
+}
+
+void radioStep(AT86RF_io *radioIO){
+  static boolean finish;
+  static int i = 15;
+  if(i>=0){
+    if(finish == 0){
+      //"finish" = 1 when cmd has been written into TRX_CMD
+      finish = (radioTRXtest(radioIO, i)==0);
+    }
+    i--;
+  }
+  else{
+    radioRun(radioIO);
+    i=15;
   }
 }

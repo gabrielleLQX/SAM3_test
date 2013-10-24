@@ -2,6 +2,7 @@
 //#include "at91sam3sd8.h"
 #include "global.h"
 #include "spi.h"
+#include "radio.h"
 #include <stdio.h>
 
 #ifndef SPI_SCKDIV
@@ -57,13 +58,15 @@ void spiTransferByte(u08 TxData, AT91_spi *spiIO, int i)
     spiIO->m_mosi = (((ShiftRegister >> i) & 1) == 1);
   }
   if(i==0){
+    /*
     //READ THE RECEIVED DATA
     //WAIT UNTIL RECEIVE REGISTER IS FULL
     while ((pSPI -> SPI_SR & AT91C_SPI_RDRF) == 0);
-    ShiftRegister = 0;
     //READ RDR AND MASK UNUSED BITS
     RxData = (pSPI -> SPI_RDR & 0xFF); 
     printf("\rspi_receive = %x\r\n", RxData);
+    */
+    ShiftRegister = 0;
     //return RxData; 
   }
 }
@@ -102,7 +105,6 @@ void spiIOInit(AT91_spi *spimaster_io)
   spimaster_io->m_npcs3 = 1;
 }
 
-
 void spiTRXSPI(AT91_spi *spiIO, u08 TxData, int i){
 
   if(spiIO->m_spck==1){
@@ -110,199 +112,39 @@ void spiTRXSPI(AT91_spi *spiIO, u08 TxData, int i){
   }
 }
 
-/*
-  int i;
-  //8bits/unit of transmission 
-  i = 7;
-  uint8_t cmd;
-  while(i>=0){
-    //receive the command from SPI master
-    if(spiIO->m_spck==1){
-      cmd |= (spiIO->m_mosi << i);
-      //transmit phy status to master
-      spiIO->m_miso = (((spiPhyStatus() >> i) & 1) == 1);
-      //wait until spck=0
-      while(spiIO->m_spck==1);
-    }
-    i--;
-  }
+void spiStep(AT91_spi *spiIO){
+  static int i = 15;
+  static int k = 0;
+  uint8_t reg_addr;//test
+  uint8_t cmd_state[9];
+  reg_addr = 0x02;//TRX_STATE
+  cmd_state[0] = TRX_OFF;//TRX_CMD
+  cmd_state[6] = RX_ON;//TRX_CMD
+  cmd_state[7] = RX_AACK_ON;//TRX_CMD
+  cmd_state[2] = TX_ARET_ON;//TRX_CMD
+  cmd_state[3] = TX_START;//TRX_CMD
+  cmd_state[8] = PLL_ON;//TRX_CMD
+  cmd_state[5] = PREP_DEEP_SLEEP;//TRX_CMD
+  cmd_state[4] = FORCE_TRX_OFF;//TRX_CMD
+  cmd_state[1] = FORCE_PLL_ON;//TRX_CMD
 
-  int k;//number of data for transmission 
-  k = 0;
-  i = 7;
-  uint8_t data, addr;
-  while(i>=0){
-    //transmit value of the register in [address]
-    if(spiIO->m_spck==1){
-      if((cmd & 0xC0) == CMD_REGISTER_READ){//register read	
-	spiIO->m_miso = (((spiReadReg(cmd) >> i) & 1) == 1); 
-      }
-      else if((cmd & 0xC0) == CMD_REGISTER_WRITE){//register write
-	data |= ((spiIO->m_mosi) << i);
-	if(i==0){
-	  spiWrReg(cmd,data);
-	  printf("\rcmd = %x, data = %x\r\n",cmd,data);
-	}
-      }
-      else if((cmd & 0xE0) == CMD_FRAME_READ){//Frame read
-	//phr = spiReadPHR();
-	spiIO->m_miso = (((spiReadPHR() >> i) & 1) == 1);
-	if(i==0){//PHR received
-	  //printf("\rRead : PHR = %x\r\n",spiReadPHR());
-	  k = spiReadPHR() + 3;//num_PSDU + LQI + ED + RX_STATUS
-	}
-      }
-      else if((cmd & 0xE0) == CMD_FRAME_WRITE){//Frame write
-	phr |= (spiIO->m_mosi << i);
-	if(i==0){//PHR received
-	  //printf("\r___write : PHR_write = %d\r\n",phr_write);
-	  //printf("\r___write : PHR_buff = %d\r\n",phr_buff);
-	  spiWrPHR(phr);
-	  k = phr;//num_PSDU
-	}
-      }
-      else if((cmd & 0xE0) == CMD_SRAM_READ){//SRAM read
-	addr |= (spiIO->m_mosi << i);
-	if(i==0){//ADDR received
-	  printf("\rRead : ADDR = %x\r\n",addr);
-	  k = 1;
-	}
-      }
-      else if((cmd & 0xE0) == CMD_SRAM_WRITE){//SRAM write
-	addr |= ((spiIO->m_mosi) << i);
-	if(i==0){//ADDR received
-	  printf("\r___write : addr = %x\r\n",addr);
-	  k = 1;//
-	}
-      }
-      else{
-	printf("\rinvalid command ! \r\n");
-	break;
-      }
-      //wait until spck=0
-      while(spiIO->m_spck==1);
-    }
-    i--;
+  spiIO->m_spck = 1;
+  if(i>=0){
+    if(i>7)
+      spiTransferByte(CMD_REGISTER_WRITE | reg_addr,spiIO,i-8);
+    //test
+    //spiTRXSPI(spiIO, CMD_REGISTER_WRITE | reg_addr, i-8);
+    else if(i>=0)
+      spiTransferByte(cmd_state[k],spiIO,i);	
+    //test
+    //spiTRXSPI(spiIO, cmd_state[k], i);
+    i--;  
   }
-  //transmission of PSDU
-  i = 7;
-  uint8_t psdu_data;
-  uint8_t rx_status;
-  uint8_t sram_data;
-  while(i>=0){
-    if((cmd & 0xE0) == CMD_FRAME_READ){//Frame Read
-      if(k>3){//PSDU
-	spiIO->m_miso = ((spiReadPSDU(k - 3 - 1) >> i) == 1);
-	//collect psdu just for printf
-	psdu_data |= (spiIO->m_miso << i);
-	if(i==0){
-	  printf("\rRead : PSDU[%d] = %x\r\n", k - 3 -1, psdu_data);
-	  psdu_data = 0;
-	  k--;
-	  i = 8;
-	}
-      }
-      else if(k==3){//LQI
-	spiIO->m_miso = (((spiReadLQI() >> i) & 1) == 1);
-	//collect lqi just for printf
-	lqi |= (spiIO->m_miso << i);
-	if(i==0){
-	  printf("\rRead : LQI = %x\r\n",lqi);
-	  k--;
-	  i = 8;
-	}
-      }
-      else if(k==2){//ED
-	spiIO->m_miso = (((spiReadED() >> i) & 1) == 1);
-	//collect ed just for printf
-	ed |= (spiIO->m_miso << i);
-	if(i==0){
-	  printf("\rRead : ED = %x\r\n",ed);
-	  k--;
-	  i = 8;
-	}
-      }
-      else if(k==1){//RX_STATUS
-	spiIO->m_miso = (((spiReadRxS() >> i) & 1) == 1);
-	//collect rx_status just for printf
-	rx_status |= (spiIO->m_miso << i);	    
-	if(i==0){	      
-	  printf("\rRead : RX_STATUS = %x\r\n",rx_status);
-	  k = -1;
-	}
-      }
-    }
-    else if((cmd & 0xE0) == 0x60){//Frame write
-      if(k>0){//PSDU
-	psdu_data |= ((spiIO->m_mosi) << i);
-	if(i==0){//psdu received
-	  printf("\r___write : No.%d",phr - k);
-	  printf(" = %d\r\n", psdu_data);
-	  spiWrPSDU(psdu_data, phr - k);
-	  printf("\rWrite : PSDU_buff[%d] = %x\r\n", phr - k, psdu_data);
-	  k--;
-	  if(k==0){
-	    k = -1;
-	    i = 0;
-	  }
-	  else{
-	    i = 8;
-	    psdu_data = 0;
-	  }
-	}
-      }
-    }
-    else if((cmd & 0xE0) == 0){//SRAM read
-      if(k>0){//
-	if(spiIO->m_nsel==0){
-	  spiIO->m_miso = ((spiReadSRAM(addr + k - 1) >> i) & 1 == 1);
-	  //collect sram_data just for printf
-	  sram_data |= (spiIO->m_miso << i);
-	  if(i==0){
-	    printf("\rRead : SRAM[%x] = %x\r\n", addr + k - 1, sram_data);
-	    k++;
-	    i = 8;
-	    if((addr + k - 1) > 0x94){
-	      printf("out of SRAM\r\n");
-	      i = 0;
-	    }
-	  }
-	}
-	else{
-	  addr = 0;
-	  sram_data = 0;
-	  i = 0;
-	}
-      }
-    }
-    else if((cmd & 0xE0) == 0x40){//SRAM write
-      if(k>0){//
-	if(spiIO->m_nsel==0){
-	  sram_data |= ((spiIO->m_mosi) << i);
-	  if(i==0){//psdu received
-	    //printf("\r___write : sram_write = %x\r\n",sram_write);
-	    //printf("\r___Write : SRAM[%x] = %x\r\n", addr_buff + k - 1, sram_data);
-	    spiWrSRAM(addr + k - 1, sram_data);//addr data
-	    k++;
-	    i = 8;
-	    sram_data = 0;
-	    if((addr + k - 1) > 0x94){
-	      printf("out of SRAM\r\n");
-	      i = 0;
-	    }
-	  }
-	}
-	else{
-	  addr = 0;
-	  sram_data = 0;
-	  i = 0;
-	}
-      }
-    }
-    while(spiyIO->m_spck==1);
-    i--;
+  else{
+    i=15;
+    if(k==8)
+      k=0;
+    else
+      k++;
   }
-  //End of the transmission
-  
 }
-*/

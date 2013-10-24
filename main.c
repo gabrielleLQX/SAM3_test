@@ -98,10 +98,32 @@ int main() {
     }
   printf("\r\n------End of SPI Test-----\r\n");
   */
+
+  printf("\r\n------SPI Test-----\r\n");
+
+  while(1){
+
+    spiStep(spiIO);
+    //radioStep(radioIO);
+    radioIO->s_sclk = spiIO->m_spck;
+    radioIO->s_mosi = spiIO->m_mosi;
+    radioIO->s_nsel = spiIO->m_npcs0_nss; 
+    radioStep(radioIO);   
+    spiIO->m_miso = radioIO->s_miso;
+    
+  }
+  radioDestroy();
+
+  free(radioIO);
+  free(spiIO);
+  
+  printf("\r------End of Radio Test-----\r\n");
+
+
   /*********************************************************************
    *test of changing state by writing TRX_CMD in register TRX_STATE(0x02)
    ********************************************************************/
-  
+  /*
   int i;
   int j;
   int k;
@@ -138,11 +160,14 @@ int main() {
 	  spiTransferByte(cmd_state[k],spiIO,i);	
 	//test
 	//spiTRXSPI(spiIO, cmd_state[k], i);
+
 	radioIO->s_sclk = spiIO->m_spck;
 	radioIO->s_mosi = spiIO->m_mosi;
 	radioIO->s_nsel = spiIO->m_npcs0_nss;
+
 	//"finish" = 1 when cmd has been written into TRX_CMD
 	finish = (radioTRXtest(radioIO, i)==0);
+
 	spiIO->m_miso = radioIO->s_miso;
 
 	if(i>=0){
@@ -155,13 +180,14 @@ int main() {
     else{
       break;
     }
+    
   }
   
   free(radioIO);
   free(spiIO);
   
   printf("\r------End of Radio Test-----\r\n");
-
+  */
   /*********************************************************************
    *test of changing state by writing TRX_CMD in register TRX_STATE(0x02)
    ********************************************************************/

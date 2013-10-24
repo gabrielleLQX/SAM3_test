@@ -196,7 +196,7 @@ static uint16_t FCF;
 
 void radioReset();
 void radioInit();
-
+void radioDestroy();
 //SPI slave
 u08 radioPhyStatus();
 u08 radioReadReg(u08 cmd);
@@ -233,6 +233,6 @@ boolean radioTxAret(AT86RF_io *radioIO);
 void radioStateMachine(AT86RF_io *radioIO);
 
 void radioRun(AT86RF_io *radioIO);
-
+void radioStep(AT86RF_io *radioIO);
 #endif
 

@@ -32,6 +32,7 @@ u16 SpiTransferWord(u16 TxData);
 
 void spiIOInit(AT91_spi *spiIO);
 void spiTRXSPI(AT91_spi *spiIO, u08 TxData, int i);
+void spiStep(AT91_spi *spiIO);
 #endif
 //@}
 

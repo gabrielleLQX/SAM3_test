@@ -1,44 +1,6 @@
 //  ----------------------------------------------------------------------------
 //          ATMEL Microcontroller Software Support  -  ROUSSET  -
 //  ----------------------------------------------------------------------------
-//  DISCLAIMER:  THIS SOFTWARE IS PROVIDED BY ATMEL "AS IS" AND ANY EXPRESS OR
-//  IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
-//  MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT ARE
-//  DISCLAIMED. IN NO EVENT SHALL ATMEL BE LIABLE FOR ANY DIRECT, INDIRECT,
-//  INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-//  LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA,
-//  OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
-//  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
-//  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
-//  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-//  ----------------------------------------------------------------------------
-// File Name           : AT91SAM3SD8.h
-// Object              : AT91SAM3SD8 definitions
-// Generated           : AT91 SW Application Group  08/30/2005 (15:52:59)
-// 
-// CVS Reference       : /AT91SAM3SD8.pl/1.21/Tue Aug 30 11:55:03 2005//
-// CVS Reference       : /SYS_SAM3S.pl/1.2/Tue Feb  1 17:01:52 2005//
-// CVS Reference       : /MC_SAM3S.pl/1.3/Fri May 20 14:12:30 2005//
-// CVS Reference       : /PMC_SAM3S_USB.pl/1.4/Tue Feb  8 13:58:22 2005//
-// CVS Reference       : /RSTC_SAM3S.pl/1.2/Wed Jul 13 14:57:40 2005//
-// CVS Reference       : /UDP_SAM3S.pl/1.1/Tue May 10 11:34:52 2005//
-// CVS Reference       : /PWM_SAM3S.pl/1.1/Tue May 10 11:53:07 2005//
-// CVS Reference       : /RTTC_6081A.pl/1.2/Tue Nov  9 14:43:58 2004//
-// CVS Reference       : /PITC_6079A.pl/1.2/Tue Nov  9 14:43:56 2004//
-// CVS Reference       : /WDTC_6080A.pl/1.3/Tue Nov  9 14:44:00 2004//
-// CVS Reference       : /VREG_6085B.pl/1.1/Tue Feb  1 16:05:48 2005//
-// CVS Reference       : /AIC_6075B.pl/1.3/Fri May 20 14:01:30 2005//
-// CVS Reference       : /PIO_6057A.pl/1.2/Thu Feb  3 10:18:28 2005//
-// CVS Reference       : /DBGU_6059D.pl/1.1/Mon Jan 31 13:15:32 2005//
-// CVS Reference       : /US_6089C.pl/1.1/Mon Jul 12 18:23:26 2004//
-// CVS Reference       : /SPI_6088D.pl/1.3/Fri May 20 14:08:59 2005//
-// CVS Reference       : /SSC_6078A.pl/1.1/Tue Jul 13 07:45:40 2004//
-// CVS Reference       : /TC_6082A.pl/1.7/Fri Mar 11 12:52:17 2005//
-// CVS Reference       : /TWI_6061A.pl/1.1/Tue Jul 13 07:38:06 2004//
-// CVS Reference       : /PDC_6074C.pl/1.2/Thu Feb  3 08:48:54 2005//
-// CVS Reference       : /ADC_6051C.pl/1.1/Fri Oct 17 09:12:38 2003//
-//  ----------------------------------------------------------------------------
-
 #ifndef AT91SAM3SD8_H
 #define AT91SAM3SD8_H
 
