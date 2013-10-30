@@ -23,6 +23,8 @@ typedef struct _ATSPI
   boolean m_npcs1;
   boolean m_npcs2;
   boolean m_npcs3;
+  boolean m_irq;
+  uint8_t line_in;
 }AT91_spi;
 
 
@@ -32,7 +34,7 @@ u16 SpiTransferWord(u16 TxData);
 
 void spiIOInit(AT91_spi *spiIO);
 void spiTRXSPI(AT91_spi *spiIO, u08 TxData, int i);
-void spiStep(AT91_spi *spiIO);
+int spiStep(AT91_spi *spiIO, int line_in);
 #endif
 //@}
 

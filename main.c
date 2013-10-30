@@ -51,6 +51,7 @@ int main() {
   spiIO->m_npcs1 = 1;
   spiIO->m_npcs2 = 1;
   spiIO->m_npcs3 = 1;
+  spiIO->m_irq = 0;
 
   radioInit();
   //Say that RADIO is initialized
@@ -64,6 +65,7 @@ int main() {
   radioIO->s_miso = 0;
   radioIO->s_mosi = 0;
   radioIO->s_nsel = 1;
+  radioIO->irq = 0;
   /**********************************************************************
    *test of QEMU_SPI
    *********************************************************************/
@@ -99,19 +101,44 @@ int main() {
   printf("\r\n------End of SPI Test-----\r\n");
   */
 
-  printf("\r\n------SPI Test-----\r\n");
-
+  int line_in;
   while(1){
+    printf("\r\n------SPI Test-----\r\n");
+  NOTEINPUT:
+    printf("\rPlease press : \r\n");
+    printf("\r(1) : Transfer a frame to RADIO;\r\n");//Radio receive
+    printf("\r(2) : Receive a frame from RADIO;\r\n");//Radio Transfer
+    printf("\rI choose : ");
+    line_in = getchar();
+    if(line_in=='1'){
+      spiIO->line_in = 1;
+      radioIO->line_in = 1;
+    }
+    else if(line_in=='2'){
+      spiIO->line_in = 2;
+      radioIO->line_in = 2;
+    }
+    else{
+      printf("\r\ninvalid ! \r\n");
+      goto NOTEINPUT;
+    }
 
-    spiStep(spiIO);
-    //radioStep(radioIO);
-    radioIO->s_sclk = spiIO->m_spck;
-    radioIO->s_mosi = spiIO->m_mosi;
-    radioIO->s_nsel = spiIO->m_npcs0_nss; 
-    radioStep(radioIO);   
-    spiIO->m_miso = radioIO->s_miso;
+    printf("%d\r\n",line_in = (getchar()=='1')?1:2);
+    spiIO->line_in = line_in;
+    while((spiIO->line_in != 0)&&(radioIO->line_in != 0)){
     
+      spiStep(spiIO); 
+      radioStep(radioIO); 
+      
+      radioIO->s_sclk = spiIO->m_spck;
+      radioIO->s_mosi = spiIO->m_mosi;
+      radioIO->s_nsel = spiIO->m_npcs0_nss;
+      spiIO->m_irq = radioIO->irq;
+      spiIO->m_miso = radioIO->s_miso;
+      //i--;
+    }
   }
+
   radioDestroy();
 
   free(radioIO);

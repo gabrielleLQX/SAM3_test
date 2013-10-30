@@ -34,7 +34,8 @@ typedef struct _ATRADIO
   boolean avss3;
   boolean evdd;
   boolean avdd;
-  boolean avss4[3]; 
+  boolean avss4[3];
+  uint8_t line_in;
 }AT86RF_io;
 
 typedef struct _AT86RFREG{
@@ -82,20 +83,11 @@ typedef struct _AT86RFREG{
   uint8_t tst_sdm;
 }AT86RF_reg;
 
-u08 phr;//phy header
-u08 lqi;//link quality indication
-u08 ed;//energy detect
-u08 psdu[128];
-
-u08 aes[19];
-
-uint8_t pre_seq[4];//preamble sequence
+//static u08 phr;//phy header
 #define fcf (psdu[0]+(psdu[1]<<8))//frame control field
+#define seq_receive (psdu[2])
 #define d_panid (psdu[3]+(psdu[4]<<8))//destination PAN_ID
 
-uint16_t fcs;//frame control sequence
-uint8_t csma_rctr;
-uint8_t frame_rctr;
 #define CMD_BITS  ((uint8_t) 0x7 << 5)
 
 
@@ -175,7 +167,7 @@ uint8_t frame_rctr;
 #define D_ADDR_MODE       ((uint16_t) 0x3 << 10)
 #define S_ADDR_MODE       ((uint16_t) 0x3 << 14)
 
-static uint16_t FCF;
+//static uint16_t FCF;
 #define FRAMETYPE_BEACON       ((uint8_t) 0x0 << 0)
 #define FRAMETYPE_DATA         ((uint8_t) 0x1 << 0)
 #define FRAMETYPE_ACK          ((uint8_t) 0x2 << 0)
@@ -194,6 +186,8 @@ static uint16_t FCF;
 #define CMD_SRAM_READ      0x00
 #define CMD_SRAM_WRITE     0x40
 
+void radioClearPSDU(u08 phr_indice);
+void radioClearGV();
 void radioReset();
 void radioInit();
 void radioDestroy();
@@ -217,22 +211,22 @@ boolean radioTRXtest(AT86RF_io *radioIO, int i);
 //State Machine
 void radioUpdate(u08 cmd);
 boolean radioFrameFiltering();
-void radioFrameReceive();
+boolean radioFrameReceive(AT86RF_io *radioIO,u08 phr_indice);
 void radioWait(u08 time);
 void radioRisingEdge(AT86RF_io *radioIO);
-void radioACKTransmit();
-void radioScanMHR();
+boolean radioACKTransmit(AT86RF_io *radioIO);
+uint8_t radioScanMHR(AT86RF_io *radioIO);
 boolean radioTransaction(AT86RF_io *radioIO);
 boolean radioFrameEnd();
-boolean radioSHRDetected();
+boolean radioSHRDetected(AT86RF_io *radioIO);
 boolean radioReceiveACK(AT86RF_io *radioIO);
 boolean radioACKValid();
 boolean radioCCA();
-void radioTransmitFrame(AT86RF_io *radioIO);
+boolean radioTransmitFrame(AT86RF_io *radioIO);
 boolean radioTxAret(AT86RF_io *radioIO);
-void radioStateMachine(AT86RF_io *radioIO);
+int radioStateMachine(AT86RF_io *radioIO, int line_in);
 
-void radioRun(AT86RF_io *radioIO);
-void radioStep(AT86RF_io *radioIO);
+int radioRun(AT86RF_io *radioIO, int line_in);
+int radioStep(AT86RF_io *radioIO, int line_in);
 #endif
 

@@ -103,6 +103,7 @@ void spiIOInit(AT91_spi *spimaster_io)
   spimaster_io->m_npcs1 = 1;
   spimaster_io->m_npcs2 = 1;
   spimaster_io->m_npcs3 = 1;
+  spimaster_io->m_irq = 0;
 }
 
 void spiTRXSPI(AT91_spi *spiIO, u08 TxData, int i){
@@ -112,39 +113,191 @@ void spiTRXSPI(AT91_spi *spiIO, u08 TxData, int i){
   }
 }
 
-void spiStep(AT91_spi *spiIO){
+int spiStep(AT91_spi *spiIO, int line_in){
   static int i = 15;
+  static int j = 0;
   static int k = 0;
+  static int a = 7;
+  static unsigned char yORn = 'n';
+  
+  uint8_t reg_irq;//test
+  static uint8_t irq_status;//test
   uint8_t reg_addr;//test
   uint8_t cmd_state[9];
+  static uint8_t cmd_mode = CMD_REGISTER_WRITE;
+  static uint8_t phr_frame = 0;
+  static uint8_t data_frame = 0;
+  reg_irq = 0x0f;
   reg_addr = 0x02;//TRX_STATE
   cmd_state[0] = TRX_OFF;//TRX_CMD
-  cmd_state[6] = RX_ON;//TRX_CMD
-  cmd_state[7] = RX_AACK_ON;//TRX_CMD
-  cmd_state[2] = TX_ARET_ON;//TRX_CMD
+  cmd_state[1] = RX_ON;//TRX_CMD
+  cmd_state[5] = RX_AACK_ON;//TRX_CMD
+  cmd_state[4] = TX_ARET_ON;//TRX_CMD
   cmd_state[3] = TX_START;//TRX_CMD
-  cmd_state[8] = PLL_ON;//TRX_CMD
-  cmd_state[5] = PREP_DEEP_SLEEP;//TRX_CMD
-  cmd_state[4] = FORCE_TRX_OFF;//TRX_CMD
-  cmd_state[1] = FORCE_PLL_ON;//TRX_CMD
+  cmd_state[2] = PLL_ON;//TRX_CMD
+  cmd_state[6] = PREP_DEEP_SLEEP;//TRX_CMD
+  cmd_state[7] = FORCE_TRX_OFF;//TRX_CMD
+  cmd_state[8] = FORCE_PLL_ON;//TRX_CMD
 
   spiIO->m_spck = 1;
-  if(i>=0){
-    if(i>7)
-      spiTransferByte(CMD_REGISTER_WRITE | reg_addr,spiIO,i-8);
-    //test
-    //spiTRXSPI(spiIO, CMD_REGISTER_WRITE | reg_addr, i-8);
-    else if(i>=0)
-      spiTransferByte(cmd_state[k],spiIO,i);	
-    //test
-    //spiTRXSPI(spiIO, cmd_state[k], i);
-    i--;  
+  
+  //interruption demanded
+  if(spiIO->m_irq==1){
+    if(i>=0){
+      if(i>7)
+	spiTransferByte(CMD_REGISTER_READ | reg_irq, spiIO, i-8);
+      else if(i>=0){	
+	//irq_status |= (spiIO->m_irq << i);
+	irq_status |= (spiIO->m_miso << i);
+      }
+      i--;  
+    }
+    else{
+      //Receive
+      if(line_in==1){
+	if((irq_status & RX_START) != 0){
+	  printf("\r Interruption : Rx Started ! \r\n");
+	}
+	if((irq_status & TRX_END) != 0){
+	  printf("\r Frame can be read now! \r\n");
+	  printf("\r Do you want to read the Frame read now (y or n)?");
+	  printf("%c\r\n", yORn=getchar());
+	  cmd_mode = CMD_FRAME_READ;
+	  phr_frame = 0;
+	  i = 15;
+	}
+	if((irq_status & AMI) != 0){
+	  printf("\r Address is valid ! \r\n");
+	}
+      }
+      //Transfer
+      else if(line_in==2){
+	if((irq_status & TRX_END) != 0){
+	  printf("\r Frame has been written ! \r\n");
+	}
+      }
+      irq_status = 0;
+      //i = 15;
+    }
   }
-  else{
-    i=15;
-    if(k==8)
-      k=0;
-    else
-      k++;
+  else {//there is no interruption
+    if(yORn != 'y'){
+      if(cmd_mode==CMD_REGISTER_WRITE){
+	if(i>=0){
+	  if(i>7)
+	    //spiTransferByte(CMD_REGISTER_WRITE | reg_addr,spiIO,i-8);
+	    spiTransferByte(cmd_mode | reg_addr,spiIO,i-8);
+	  else if(i>=0)
+	    spiTransferByte(cmd_state[k],spiIO,i);
+	  
+	  i--;  
+	}
+	else{
+	  //i = 15;
+	  if(k==0){
+	    k = line_in;
+	    i = 15;
+	  }
+	  //Receive
+	  else if(k==1){
+	    i = -1;
+	  }
+	  //Transfer
+	  else if(k==2){
+	    //FrameWrite
+	    i = 15;
+	    cmd_mode = CMD_FRAME_WRITE;
+	    phr_frame = 0;
+	  }
+	  else if(k==3)
+	    phr_frame = 0;
+	}
+      }
+      else if(cmd_mode==CMD_FRAME_WRITE){
+	if(i==15){
+	  printf("\r Number of octets you want to transfer (0<n<127): ");
+	  phr_frame += 100 * (getchar()-'0');
+	  phr_frame += 10 * (getchar()-'0');
+	  phr_frame += 1 * (getchar()-'0');
+	  printf("%d\r\n", phr_frame);
+	  //phr = phr_frame;
+	}
+	if(i>=0){
+	  if(i>7)
+	    spiTransferByte(cmd_mode | reg_addr,spiIO,i-8);
+	  else if(i>=0){
+	    spiTransferByte(phr_frame,spiIO,i);
+	    j = 0;
+	    a = 7;
+	  }
+	  i--;  
+	}
+	else if(j<phr_frame){
+	  if(a==7){
+	    data_frame = 0;
+	    printf("\r Data[%d] to transfer (0<x<255): ", j);
+	    data_frame += 100 * (getchar()-'0');
+	    data_frame += 10 * (getchar()-'0');
+	    data_frame += 1 * (getchar()-'0');
+	    printf("%d\r\n", data_frame);
+	  }
+	  if(a>=0){
+	    spiTransferByte(data_frame,spiIO,a);
+	    a--;
+	  }
+	  else{
+	    j++;
+	    a = 7;
+	    if(j==phr_frame){
+	      cmd_mode = CMD_REGISTER_WRITE;
+	      data_frame = 0;
+	      a = 7;
+	      i = 15;
+	      k = 3;
+	    }
+	  }
+	}	
+      }
+    }
+    //Receive done:FrameRead
+    else{
+      if(i>=0){
+	//cmd : Frame Read
+	if(i>7)
+	  spiTransferByte(cmd_mode,spiIO,i-8);//Frame Read
+	//
+	else if(i>=0){
+	  phr_frame |= (spiIO->m_miso << i);
+	  if(i==0){
+	    printf("\r%d octets to read from Radio ! \r\n", phr_frame);
+	    j = 0;
+	    a = 7;
+	  }
+	}
+	i--;  
+      }
+      else if(j<(phr_frame+3)){	
+	if(a==7){
+	  data_frame = 0;
+	  printf("\r Data[%d] : ", j);
+	}
+	if(a>=0){
+	  data_frame |= (spiIO->m_miso << a);
+	  a--;
+	}
+	else{
+	  printf("%d\r\n", data_frame);
+	  j++;
+	  a = 7;
+	  data_frame = 0;
+	  if(j==(phr_frame+3)){
+	    printf("Frame Read finished ! \n\r");
+	    line_in = 0;
+	  }
+	}
+      }
+      
+    }
   }
+  return line_in;
 }
