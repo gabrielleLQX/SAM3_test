@@ -36,6 +36,7 @@ typedef struct _ATRADIO
   boolean avdd;
   boolean avss4[3];
   uint8_t line_in;
+  boolean finish;
 }AT86RF_io;
 
 typedef struct _AT86RFREG{
@@ -224,9 +225,9 @@ boolean radioACKValid();
 boolean radioCCA();
 boolean radioTransmitFrame(AT86RF_io *radioIO);
 boolean radioTxAret(AT86RF_io *radioIO);
-int radioStateMachine(AT86RF_io *radioIO, int line_in);
+void radioStateMachine(AT86RF_io *radioIO);
 
-int radioRun(AT86RF_io *radioIO, int line_in);
-int radioStep(AT86RF_io *radioIO, int line_in);
+void radioRun(AT86RF_io *radioIO);
+void radioStep(AT86RF_io *radioIO);
 #endif
 

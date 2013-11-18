@@ -1,14 +1,3 @@
-/*
- * TITLE		: 	SPI DRIVER FOR AT91SAM7S256
- * AUTHOR		:	BALAJI VENKATACHALAM
- * DATE			:	2ND OCTOBER 2008
- * FILENAME		:	spi.h
- * DESCRIPTION	:	Comprises Function Prototypes for the following Functions
- * 					1. spiInit
- * 					2. spiTransferByte
- * 					3. spiTransferWord
- * */
-
 #ifndef ARMLIB_SPI_H
 #define ARMLIB_SPI_H
 
@@ -25,6 +14,7 @@ typedef struct _ATSPI
   boolean m_npcs3;
   boolean m_irq;
   uint8_t line_in;
+  boolean finish;
 }AT91_spi;
 
 
@@ -34,7 +24,7 @@ u16 SpiTransferWord(u16 TxData);
 
 void spiIOInit(AT91_spi *spiIO);
 void spiTRXSPI(AT91_spi *spiIO, u08 TxData, int i);
-int spiStep(AT91_spi *spiIO, int line_in);
+void spiStep(AT91_spi *spiIO);
 #endif
 //@}
 

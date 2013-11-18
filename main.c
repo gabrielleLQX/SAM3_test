@@ -51,7 +51,9 @@ int main() {
   spiIO->m_npcs1 = 1;
   spiIO->m_npcs2 = 1;
   spiIO->m_npcs3 = 1;
+  spiIO->line_in = 0;
   spiIO->m_irq = 0;
+  spiIO->finish = 0;
 
   radioInit();
   //Say that RADIO is initialized
@@ -65,7 +67,9 @@ int main() {
   radioIO->s_miso = 0;
   radioIO->s_mosi = 0;
   radioIO->s_nsel = 1;
+  radioIO->line_in = 0;
   radioIO->irq = 0;
+  radioIO->finish = 0;
   /**********************************************************************
    *test of QEMU_SPI
    *********************************************************************/
@@ -102,7 +106,8 @@ int main() {
   */
 
   int line_in;
-  while(1){
+  static int stop = 0;
+  //while(1){
     printf("\r\n------SPI Test-----\r\n");
   NOTEINPUT:
     printf("\rPlease press : \r\n");
@@ -113,20 +118,25 @@ int main() {
     if(line_in=='1'){
       spiIO->line_in = 1;
       radioIO->line_in = 1;
+      printf("%d\r\n",1);
     }
     else if(line_in=='2'){
       spiIO->line_in = 2;
       radioIO->line_in = 2;
+      printf("%d\r\n",2);
     }
     else{
-      printf("\r\ninvalid ! \r\n");
+      printf("invalid ! \r\n");
       goto NOTEINPUT;
     }
 
-    printf("%d\r\n",line_in = (getchar()=='1')?1:2);
-    spiIO->line_in = line_in;
-    while((spiIO->line_in != 0)&&(radioIO->line_in != 0)){
-    
+    //stop = 0;
+
+    //while((spiIO->line_in != 0)&&(radioIO->line_in != 0)){
+    while(stop == 0){
+      //stop = spiIO->line_in & radioIO->line_in;
+      //spiIO->line_in = stop;
+      //radioIO->line_in = stop; 
       spiStep(spiIO); 
       radioStep(radioIO); 
       
@@ -135,9 +145,11 @@ int main() {
       radioIO->s_nsel = spiIO->m_npcs0_nss;
       spiIO->m_irq = radioIO->irq;
       spiIO->m_miso = radioIO->s_miso;
-      //i--;
+      //spiIO->line_in = radioIO->line_in;
+      radioIO->line_in = spiIO->line_in;
+      stop = radioIO->finish | spiIO->finish;
     }
-  }
+    //}
 
   radioDestroy();
 
