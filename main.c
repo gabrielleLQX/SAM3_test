@@ -130,7 +130,7 @@ int main() {
       goto NOTEINPUT;
     }
 
-    //stop = 0;
+    stop = 0;
 
     //while((spiIO->line_in != 0)&&(radioIO->line_in != 0)){
     while(stop == 0){
