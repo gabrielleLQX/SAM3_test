@@ -107,7 +107,7 @@ int main() {
 
   int line_in;
   static int stop = 0;
-  //while(1){
+  while(1){
     printf("\r\n------SPI Test-----\r\n");
   NOTEINPUT:
     printf("\rPlease press : \r\n");
@@ -126,17 +126,20 @@ int main() {
       printf("%d\r\n",2);
     }
     else{
-      printf("invalid ! \r\n");
-      goto NOTEINPUT;
+      printf("invalid ! \r\n Quit? ");
+      if(getchar()=='y'){
+	printf("y\r\n");
+	goto NOTEQUIT;
+      }
+      else{
+	printf("n\r\n");
+	goto NOTEINPUT;
+      }
     }
 
     stop = 0;
 
-    //while((spiIO->line_in != 0)&&(radioIO->line_in != 0)){
     while(stop == 0){
-      //stop = spiIO->line_in & radioIO->line_in;
-      //spiIO->line_in = stop;
-      //radioIO->line_in = stop; 
       spiStep(spiIO); 
       radioStep(radioIO); 
       
@@ -149,8 +152,9 @@ int main() {
       radioIO->line_in = spiIO->line_in;
       stop = radioIO->finish | spiIO->finish;
     }
-    //}
+  }
 
+ NOTEQUIT:
   radioDestroy();
 
   free(radioIO);

@@ -392,7 +392,6 @@ void radioWrReg(u08 cmd, u08 value)
 
 u08 radioReadPHR()
 {
-  //phr = 11;
   return phr;
 }
 
@@ -1002,7 +1001,8 @@ boolean radioTRXtest(AT86RF_io *radioIO, int i){
 
 void radio_update(uint8_t cmd)
 {
-  uint8_t status = radio_reg->tx_status & TRX_STATUS;
+  uint8_t status;
+  status = radio_reg->tx_status & TRX_STATUS;
 
   if(cmd == TX_START){
     if(status == TX_ARET_ON){      
@@ -1283,10 +1283,9 @@ uint8_t radioScanMHR(AT86RF_io *radioIO)
   static int i = 0;//counter
   static int j = 7;//indice of bit
   static uint8_t phr_indice = 3;
+  uint8_t phr_tmp = 0;
 
-  //if((i==0)&&(j==7))
-  //  radioClearGV(0);
-
+  phr_tmp = 0;
   if(i<phr_indice){    
     if(j>=0){
       psdu[i] |= (radioIO->rfn << j);
@@ -1316,7 +1315,7 @@ uint8_t radioScanMHR(AT86RF_io *radioIO)
       i++;
     }
     if(i<=phr_indice)
-      return 0;
+      return 1;
   }
   else{
     switch(fcf & FRAME_TYPE){
@@ -1336,19 +1335,29 @@ uint8_t radioScanMHR(AT86RF_io *radioIO)
       printf("Reserved frame type ! \n\r");
     }
     printf("--------Finish Scanning-------\n\r");
-    return phr_indice;
+    
+    i = 0;
+    j = 7;
+    phr_tmp = phr_indice;
+    phr_indice = 3;
+    return phr_tmp;
   }
 }
 
 //BUSY_RX_AACK
 boolean radioTransaction(AT86RF_io *radioIO) 
 {
-  uint8_t phr_indice;
+  static uint8_t phr_indice = 0;
 
-  radio_reg->irq_status |= RX_START;
-  radioIO->irq = 1;
-  
-  phr_indice = radioScanMHR(radioIO);
+  //printf("\rphr_indice = %d\r\n",phr_indice);
+  if(phr_indice==0){
+    radio_reg->irq_status |= RX_START;
+    radioIO->irq = 1;  
+  }
+  if(phr_indice<3){
+    phr_indice = radioScanMHR(radioIO);
+  }
+
   if(phr_indice>2){
 
     if(radioFrameFiltering()){
@@ -1383,12 +1392,14 @@ boolean radioTransaction(AT86RF_io *radioIO)
 	      }
 	      if(radioACKTransmit(radioIO)){
 		printf("\rTransaction finished ! \r\n");
+		phr_indice = 0;
 		return 1;
 	      }
 	    }
 	  }
 	  else if((radio_reg->tx_status & TRX_STATUS) == BUSY_RX){
 	    printf("\rTransaction finished ! \r\n");
+	    phr_indice = 0;
 	    return 1;
 	  }
 	}  
@@ -1403,6 +1414,7 @@ boolean radioTransaction(AT86RF_io *radioIO)
 	    radio_reg->irq_status |= TRX_END;
 	    radioIO->irq = 1;
 	    printf("\rTransaction finished ! \r\n");
+	    phr_indice = 0;
 	    return 1;
 	  }
 	  //Reserved Frames
@@ -1413,6 +1425,7 @@ boolean radioTransaction(AT86RF_io *radioIO)
 		  radio_reg->irq_status |= TRX_END;
 		  radioIO->irq = 1;
 		  printf("\rTransaction finished ! \r\n");
+		  phr_indice = 0;
 		  return 1;
 		}
 	    }
@@ -1424,6 +1437,7 @@ boolean radioTransaction(AT86RF_io *radioIO)
 	    radioIO->irq = 1;
 	    //radioClearGV();
 	    printf("\rTransaction finished ! \r\n");
+	    phr_indice = 0;
 	    return 1;
 	  }
 	}
@@ -1449,15 +1463,7 @@ boolean radioFrameEnd()
 
 
 boolean radioSHRDetected(AT86RF_io *radioIO)
-{  /*
-  int i;
-  while(i<4)
-    pre_seq[i++] = 0;
-  radio_reg->sfd_value = 0xA7;
-  printf("\rSHR detected ! \r\n");
-  return 1;
-   */
-  
+{   
   static int i = 0;//counter
   static int j = 7;//indice of bit
   static uint8_t sfd = 0;
@@ -1521,8 +1527,10 @@ boolean radioSHRDetected(AT86RF_io *radioIO)
       }
       else{	
 	printf("\rvalid PHR ! \r\n");
-	i = 6;
+	//i = 6;
+	i = 0;
 	j = 7;
+	sfd = 0;
 	return 1;
       }
     }    
@@ -1769,6 +1777,8 @@ boolean radioTxAret(AT86RF_io *radioIO)
   
   INTERRUPT:
     radio_reg->irq_status |= TRX_END;
+    radioIO->irq = 1;
+    i = 0;
     return 1;
   }
   return 0;
@@ -1786,7 +1796,7 @@ void radioStateMachine(AT86RF_io *radioIO)
   //actual state
   switch(radio_reg->tx_status & TRX_STATUS){
   case P_ON:
-    printf("\r State = P_ON\n\r");
+    //printf("\r State = P_ON\n\r");
     radio_update(cmd);
     break;
   case BUSY_RX:
@@ -1805,7 +1815,7 @@ void radioStateMachine(AT86RF_io *radioIO)
       radioIO->irq = 1;
       printf("\r jump to state = PLL_ON\n\r");
       radio_reg->tx_status = radio_reg->tx_status & (~TRX_STATUS) | PLL_ON;
-      radioIO->finish = 1;
+      //radioIO->finish = 1;
       //radioIO->line_in = 0;
     }
     break;
@@ -1928,6 +1938,8 @@ void radioStep(AT86RF_io *radioIO){
     }
   }  
   else{
+    if(finish==1)radioRun(radioIO);
+
     if(radioIO->s_nsel == 0){
       if(radioIO->s_sclk==1){
 	
@@ -1944,9 +1956,10 @@ void radioStep(AT86RF_io *radioIO){
 	  //j > 1 & line_in = 1 : cmd:FrameRead(possible)
 	  //j = 2 & line_in = 2 : cmd:FrameWrite
 	  //j = 3 & line_in = 2 : cmd:TX_START/radioIO->slp_tr = 1
-	  if(finish==1)radioRun(radioIO);
 	  
-	  //Transfer FrameWrite
+	  /*****************************************************
+	   *Transfer FrameWrite
+	   ****************************************************/
 	  if(radioIO->line_in == 2){
 	    if(j<2){
 	      if(finish==1){
@@ -1963,6 +1976,13 @@ void radioStep(AT86RF_io *radioIO){
 	      }
 	    }	  
 	    else if(j==3){
+	      if(finish==1){
+		i = 15;
+		j++;
+		finish = 0;
+	      }	      
+	    }
+	    else if(j==4){
 	      if(radioIO->line_in == 0){
 		if(radio_reg->irq_status != 0){
 		  if(finish==1){
@@ -1975,7 +1995,9 @@ void radioStep(AT86RF_io *radioIO){
 	      }
 	    }
 	  }
-	  //Receive 
+	  /**************************************************
+	   *Receive 
+	   **************************************************/
 	  else if(radioIO->line_in == 1){
 	    if(j==0){
 	      if(finish==1){
@@ -2005,13 +2027,13 @@ void radioStep(AT86RF_io *radioIO){
 	}      
       }
     }
-    /*    
     else{
-      radioIO->finish = 1;
-      j = 1;
+      //radioIO->finish = 1;
+      j = 0;
       finish = 0;
-      i = 15;      
+      i = 15;
+      radioClearPSDU(0);
+      radioClearGV();
     }   
-    */
   }
 }

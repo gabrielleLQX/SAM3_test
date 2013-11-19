@@ -1,0 +1,43 @@
+
+//////////////////////////////////////////////////////////////////////////
+                     Author : Gabrielle Qingxue LI
+                     Project : OCARI
+		     Latest update date : 2013-11-19
+//////////////////////////////////////////////////////////////////////////
+
+
+Steps to debug :
+
+1. Open 3 terminals.
+
+2. Go into the PATH the repertory of this programe
+
+3. In first terminal, taping in "make monitor"
+
+4. In second terminal, taping in "telnet localhost 5022"
+
+5. In third terminal, taping in "arm-none-eabi-gdb main.elf -x BREAKINFO"
+
+6. stay in the third one, and tape "c"(which means continue in GDB)
+
+
+If you choose to transfer a frame : 
+
+7. the first breakpoint is set for the configuration of variable SFD
+(Start-of-Frame Delimiter) which should match the value of the register 
+SFD_VALUE(0xA7)
+
+8. the second breakpoint is set for the configuration of variable PHR
+(PHY Header) whose least significant seven bits denote the frame length 
+of the following PSDU(PHY Service Data Unit), while the most significant 
+bit of that octet is reserved, and shall be set to zero for IEEE 802.15.4 
+compliant frames.
+
+9. the third breakpoint is set for an option if you want to enter the 
+BUSY_TX state by rising the input pin "slp_tr", set it when the programe 
+runs to this breakpoint.
+
+
+If you choose to receive a frame :
+
+7. follow the instruction printed in the second terminal.
