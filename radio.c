@@ -449,7 +449,7 @@ void radioWrPHR(u08 phr_value){
 
 void radioWrPSDU(u08 psdu_value, u08 k){
   *(psdu+k) = psdu_value;
-  printf("\rWrite : PSDU[%d] = %x\r\n", k, *(psdu + k));
+  //printf("\rWrite : PSDU[%d] = %x\r\n", k, *(psdu + k));
 }
 
 u08 radioReadSRAM(u08 addr){
@@ -520,7 +520,7 @@ void radioTRXSPI(AT86RF_io *radioIO){
 	data |= ((radioIO->s_mosi) << i);
 	if(i==0){
 	  radioWrReg(cmd,data);
-	  printf("\rcmd = %x, data = %x\r\n",cmd,data);
+	  //printf("\rcmd = %x, data = %x\r\n",cmd,data);
 	}
       }
       else if((cmd & 0xE0) == CMD_FRAME_READ){//Frame read
@@ -543,14 +543,14 @@ void radioTRXSPI(AT86RF_io *radioIO){
       else if((cmd & 0xE0) == CMD_SRAM_READ){//SRAM read
 	addr |= (radioIO->s_mosi << i);
 	if(i==0){//ADDR received
-	  printf("\rRead : ADDR = %x\r\n",addr);
+	  //printf("\rRead : ADDR = %x\r\n",addr);
 	  k = 1;
 	}
       }
       else if((cmd & 0xE0) == CMD_SRAM_WRITE){//SRAM write
 	addr |= ((radioIO->s_mosi) << i);
 	if(i==0){//ADDR received
-	  printf("\r___write : addr = %x\r\n",addr);
+	  //printf("\r___write : addr = %x\r\n",addr);
 	  k = 1;//
 	}
       }
@@ -619,10 +619,10 @@ void radioTRXSPI(AT86RF_io *radioIO){
       if(k>0){//PSDU
 	psdu_data |= ((radioIO->s_mosi) << i);
 	if(i==0){//psdu received
-	  printf("\r___write : No.%d",phr - k);
-	  printf(" = %d\r\n", psdu_data);
+	  //printf("\r___write : No.%d",phr - k);
+	  //printf(" = %d\r\n", psdu_data);
 	  radioWrPSDU(psdu_data, phr - k);
-	  printf("\rWrite : PSDU_buff[%d] = %x\r\n", phr - k, psdu_data);
+	  //printf("\rWrite : PSDU_buff[%d] = %x\r\n", phr - k, psdu_data);
 	  k--;
 	  if(k==0){
 	    k = -1;
@@ -714,8 +714,8 @@ boolean radioTRXtest(AT86RF_io *radioIO, int i){
       cmd |= (radioIO->s_mosi << (i-8));
       //transmit phy status to master
       radioIO->s_miso = (((radioPhyStatus() >> (i-8)) & 1) == 1);
-      if(i==8)
-	  printf("\rcmd = %x\r\n",cmd);	
+      //if(i==8)
+	//printf("\rcmd = %x\r\n",cmd);	
       i--;
     }
   }
@@ -730,7 +730,7 @@ boolean radioTRXtest(AT86RF_io *radioIO, int i){
 	radioIO->s_miso = (((radioReadReg(cmd & 0x3F) >> i) & 1) == 1); 
 	if(i==0){
 	  k = 0;
-	  printf("\rreg[0x%x] = %x\r\n",cmd & 0x3F,radioReadReg(cmd & 0x3F));
+	  //printf("\rreg[0x%x] = %x\r\n",cmd & 0x3F,radioReadReg(cmd & 0x3F));
 	  if((cmd & 0x3F)==0x0F){
 	    radio_reg->irq_status = 0;
 	    radioIO->irq = 0;
@@ -750,7 +750,7 @@ boolean radioTRXtest(AT86RF_io *radioIO, int i){
 	if(i==0){
 	  k = 0;
 	  radioWrReg(cmd,data);
-	  printf("\rcmd = %x, data = %x\r\n",cmd,data);	
+	  //printf("\rcmd = %x, data = %x\r\n",cmd,data);	
 	  data = 0;
 	  cmd = 0;
 	  j = 0;
@@ -800,7 +800,7 @@ boolean radioTRXtest(AT86RF_io *radioIO, int i){
 	    k=0;
 	    return 0;
 	  }
-	  printf("\r___write : addr = %x\r\n",addr);
+	  //printf("\r___write : addr = %x\r\n",addr);
 	  k = 1;//
 	  j = 7;
 	}
@@ -873,10 +873,10 @@ boolean radioTRXtest(AT86RF_io *radioIO, int i){
 	if(k>0){//PSDU
 	  psdu_data |= ((radioIO->s_mosi) << j);
 	  if(j==0){//psdu received
-	    printf("\r___write : No.%d",phr - k);
+	    //printf("\r___write : No.%d",phr - k);
 	    printf(" = %d\r\n", psdu_data);
 	    radioWrPSDU(psdu_data, phr - k);
-	    printf("\rWrite : PSDU_buff[%d] = %x\r\n", phr - k, psdu_data);
+	    //printf("\rWrite : PSDU_buff[%d] = %x\r\n", phr - k, psdu_data);
 	    k--;
 	    j = 8;
 	    psdu_data = 0;
@@ -1212,7 +1212,7 @@ boolean radioFrameReceive(AT86RF_io *radioIO, u08 phr_indice){
     return 0;
   }
   else{
-    printf("\r---------Finish Receiving-------\n\r");
+    printf("\r--------Finish Receiving-------\n\r");
     i = 0;
     j = 7;
     return 1;

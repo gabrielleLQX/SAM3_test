@@ -277,7 +277,7 @@ void spiStep(AT91_spi *spiIO){
 	      data_frame |= (spiIO->m_miso << a);
 	      a--;
 	      if(a<0){
-		printf("\r Data[%d] : %d\r\n", j,data_frame);
+		//printf("\r Data[%d] : %d\r\n", j,data_frame);
 		j++;
 		a = 7;
 		data_frame = 0;

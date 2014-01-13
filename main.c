@@ -78,6 +78,7 @@ int main() {
   int j = 0;//counter of the string
   int i = 7;//indice of bit in each transferred data
   unsigned char shift_reg = 0;
+
   //while(gdb_s==0);
   printf("\r\n------SPI Test-----\r\n");
   spiIO->m_spck = 1;
