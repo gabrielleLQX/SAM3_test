@@ -2028,7 +2028,6 @@ void radioStep(AT86RF_io *radioIO){
       }
     }
     else{
-      //radioIO->finish = 1;
       j = 0;
       finish = 0;
       i = 15;

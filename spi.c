@@ -121,8 +121,8 @@ void spiStep(AT91_spi *spiIO){
   static unsigned char yORn = 'n';
   
   static uint8_t reg_irq = 0x0f;
-  static uint8_t irq_status = 0;//test
-  static uint8_t reg_addr = 0x02;//test
+  static uint8_t irq_status = 0;
+  static uint8_t reg_addr = 0x02;
   uint8_t cmd_state[10];
   static uint8_t cmd_mode = CMD_REGISTER_WRITE;
   static uint8_t phr_frame = 0;

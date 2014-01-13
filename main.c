@@ -1,6 +1,11 @@
 #include <stdio.h>
-#include <pthread.h>
+#include <fcntl.h>
 #include <unistd.h>
+#include <stdlib.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+
+#include <pthread.h>
 #include "Board.h"
 // #include "Cstartup_SAM3.h"
 #include "serial.h"
@@ -10,7 +15,28 @@
 #include "radio.h"
 #include "rtt.h"
 #include "pmc.h"
-
+/*
+void redirect_stdout(char *filename)
+{
+  int fd;
+  if ((fd = open(filename,O_CREAT|O_WRONLY,0666)) < 0)
+    //open a new file 
+    {
+      perror(filename);
+      exit(1);
+    }
+  close(1);                       //close old 
+  //standard output
+  
+  if (dup(fd)!=1)                //dup new fd to standard input
+    {
+      fprintf(stderr,"\r Unexpected dup failure\n\r");
+      exit(1);
+    }
+  
+  close(fd);                       //close original, new fd, no longer needed
+}
+*/
 
 AT91PS_RTTC pRTTC = AT91C_BASE_RTTC;
 AT91PS_PMC pPMC = AT91C_BASE_PMC;
@@ -112,8 +138,8 @@ int main() {
     printf("\r\n------SPI Test-----\r\n");
   NOTEINPUT:
     printf("\rPlease press : \r\n");
-    printf("\r(1) : Transfer a frame to RADIO;\r\n");//Radio receive
-    printf("\r(2) : Receive a frame from RADIO;\r\n");//Radio Transfer
+    printf("\r(1) : Receive a frame;\r\n");//Radio receive
+    printf("\r(2) : Transfer a frame;\r\n");//Radio Transfer
     printf("\rI choose : ");
     line_in = getchar();
     if(line_in=='1'){
@@ -152,6 +178,19 @@ int main() {
       //spiIO->line_in = radioIO->line_in;
       radioIO->line_in = spiIO->line_in;
       stop = radioIO->finish | spiIO->finish;
+
+      /*
+      fflush(stdout);
+      redirect_stdout("signaux");       //redirect standard output
+      //printf("Hello !\n\r");
+      printf("%b %b %b %b %b\n",
+	     spiIO->m_spck,
+	     spiIO->m_mosi,
+	     radioIO->s_miso,
+	     spiIO->m_npcs0_nss,
+	     radioIO->irq);//printf goes to file foo      
+      fflush(stdout);
+      */
     }
   }
 
